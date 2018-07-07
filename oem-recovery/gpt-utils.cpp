@@ -38,8 +38,10 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#ifndef _GENERIC_KERNEL_HEADERS
 #include <scsi/ufs/ioctl.h>
 #include <scsi/ufs/ufs.h>
+#endif
 #include <unistd.h>
 #include <linux/fs.h>
 #include <limits.h>
@@ -614,6 +616,7 @@ error:
 
 int set_boot_lun(char *sg_dev, uint8_t boot_lun_id)
 {
+#ifndef _GENERIC_KERNEL_HEADERS
         int fd = -1;
         int rc;
         struct ufs_ioctl_query_data *data = NULL;
@@ -654,6 +657,9 @@ error:
         if (data)
                 free(data);
         return -1;
+#else
+	return 0;
+#endif
 }
 
 //Swtich betwieen using either the primary or the backup
