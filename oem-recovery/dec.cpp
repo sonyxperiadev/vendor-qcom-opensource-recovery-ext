@@ -37,6 +37,11 @@
 #include <linux/qseecom.h>
 #include <linux/msm_ion.h>
 
+#if TARGET_ION_ABI_VERSION >= 2
+#include <ion/ion.h>
+#endif
+#include <linux/dma-buf.h>
+
 /* Service IDs */
 #define SCM_SVC_SSD                 0x07
 
@@ -95,9 +100,106 @@ struct ion_buf_handle {
     uint32_t buffer_len;
     int ion_fd;
     int ifd_data_fd;
+#ifndef TARGET_ION_ABI_VERSION
     struct ion_handle_data ion_alloc_handle;
+#endif
 };
 
+#if TARGET_ION_ABI_VERSION >= 2
+/* uses the new version of ION */
+
+static int ion_memalloc(struct ion_buf_handle *handle, uint32_t size, uint32_t heap)
+{
+
+    int32_t ret = 0;
+    unsigned char *v_addr;
+    int32_t ion_fd = -1;
+    int32_t map_fd = -1;
+    int retry = 0;
+    uint32_t len = (size + 4095) & (~4095);
+    uint32_t align = 4096;
+    uint32_t flags = 0;
+    struct dma_buf_sync buf_sync;
+    unsigned int heap_id =  ION_HEAP(heap);
+    ion_fd  = ion_open();
+    if (ion_fd < 0) {
+          fprintf(stderr, "Cannot open ION device (%s)\n", strerror(errno));
+          return -1;
+    }
+
+    ret = ion_alloc_fd(ion_fd, len, align, ION_HEAP(heap_id), flags, &map_fd);
+    if (ret) {
+        fprintf(stderr, "ion_alloc_fd for heap failed", strerror(errno));
+        ret = -1;
+        goto alloc_fail;
+    }
+    v_addr = (unsigned char *)mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_SHARED, map_fd, 0);
+    if (v_addr == MAP_FAILED) {
+        fprintf(stderr, "Ion memory map failed (%s)\n", strerror(errno));
+        ret = -1;
+        goto map_fail;
+    }
+
+    handle->ion_fd = ion_fd;
+    handle->ifd_data_fd = map_fd;
+    handle->buffer = v_addr;
+    handle->buffer_len = size;
+
+    buf_sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_RW;
+    ret = ioctl(map_fd, DMA_BUF_IOCTL_SYNC, &buf_sync);
+    if (ret) {
+        fprintf(stderr, "ION buffer allocation failed (%s)\n", strerror(errno));
+        ret = -1;
+        goto sync_fail;
+    }
+    return ret;
+
+sync_fail:
+    if (v_addr) {
+        munmap(v_addr, len);
+        handle->buffer = NULL;
+    }
+map_fail:
+    if (map_fd >= 0 ) {
+        ion_close(map_fd);
+        handle->ifd_data_fd = -1;
+    }
+alloc_fail:
+    if (ion_fd >= 0 ) {
+        ion_close(ion_fd);
+        handle->ion_fd = -1;
+    }
+    return ret;
+}
+
+static int ion_memfree(struct ion_buf_handle *handle)
+{
+    struct dma_buf_sync buf_sync;
+    uint32_t len = (handle->buffer_len + 4095) & (~4095);
+    int ret = 0;
+
+    buf_sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_RW;
+    ret = ioctl(handle->ifd_data_fd, DMA_BUF_IOCTL_SYNC, &buf_sync);
+    if (ret) {
+       fprintf(stderr, "ioctl failed (%s)\n", strerror(errno));
+    }
+    if (handle->buffer) {
+        munmap(handle->buffer, len);
+        handle->buffer = NULL;
+    }
+    if (handle->ifd_data_fd >= 0 ) {
+        ion_close(handle->ifd_data_fd);
+        handle->ifd_data_fd= -1;
+    }
+    if (handle->ion_fd >= 0 ) {
+        ion_close(handle->ion_fd);
+        handle->ion_fd = -1;
+    }
+    return ret;
+}
+
+#endif
+#ifndef TARGET_ION_ABI_VERSION
 static int
 ion_memalloc(struct ion_buf_handle *buf, uint32_t size, uint32_t heap)
 {
@@ -211,6 +313,21 @@ static int ion_buffer_clean_inval(struct ion_buf_handle *buf, uint32_t cmd)
         fprintf(stderr, "clean_inval cache failed (%s)\n", strerror(errno));
 
     return rc;
+}
+#endif
+
+
+static int ion_buffer_clean_inval_stub(struct ion_buf_handle *buf)
+{
+
+    int ret = 0;
+    #ifndef TARGET_ION_ABI_VERSION
+    ret = ion_buffer_clean_inval(&ionbuf, ION_IOC_CLEAN_INV_CACHES);
+    #else
+    fprintf(stderr,"ION_IOC_INV_CACHES not defines");
+    #endif
+    return ret;
+
 }
 
 static int is_encrypted(int smcmod_fd, struct ion_buf_handle *buf,
@@ -344,9 +461,12 @@ int decrypt_image(const char *src_file, const char *dst_file)
     fsize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
+
+    #ifdef ION_IOC_INV_CACHES
     ret = ion_memalloc(&ionbuf, fsize, ION_PIL1_HEAP_ID);
     if (ret)
         goto exit;
+    #endif
 
     read = fread(ionbuf.buffer, fsize, 1, file);
     if (read != 1) {
@@ -354,10 +474,9 @@ int decrypt_image(const char *src_file, const char *dst_file)
         ret = -errno;
         goto exit;
     }
-
-    ret = ion_buffer_clean_inval(&ionbuf, ION_IOC_CLEAN_INV_CACHES);
+    ret = ion_buffer_clean_inval_stub(&ionbuf);
     if (ret < 0)
-        goto exit;
+		goto exit;
 
     ret = ioctl(qseecom_fd, QSEECOM_IOCTL_PERF_ENABLE_REQ);
     if (ret < 0)
@@ -372,13 +491,12 @@ int decrypt_image(const char *src_file, const char *dst_file)
         ret = decrypt(smcmod_fd, &ionbuf, fsize, md_ctx, offset);
         if (ret < 0)
             goto exit;
-
-        ion_buffer_clean_inval(&ionbuf, ION_IOC_INV_CACHES);
-
+        ret = ion_buffer_clean_inval_stub(&ionbuf);
+        if (ret < 0)
+            goto exit;
         ret = save_file(dst_file, ionbuf.buffer + offset, fsize - offset);
         if (ret < 0)
             goto exit;
-
         fprintf(stdout, "decrypting done!\n");
     }
 

@@ -13,7 +13,10 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := optional
 LOCAL_STATIC_LIBRARIES += libedify libotautil libz
-LOCAL_C_INCLUDES := bootable/recovery
+LOCAL_C_INCLUDES := bootable/recovery \
+                system/core/libion/include \
+                system/core/libion/kernel-headers
+
 LOCAL_SRC_FILES := gpt-utils.cpp dec.cpp oem-updater.cpp
 LOCAL_CFLAGS := -Wall
 ifeq ($(TARGET_HAS_GENERIC_KERNEL_HEADERS),true)
@@ -22,12 +25,16 @@ else ifeq ($(TARGET_COMPILE_WITH_MSM_KERNEL),true)
   LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
   LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
 endif
+LOCAL_SHARED_LIBRARIES += libion
 LOCAL_MODULE := librecovery_updater_msm
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := optional
-LOCAL_C_INCLUDES := bootable/recovery
+LOCAL_C_INCLUDES := bootable/recovery \
+               system/core/libion/include \
+               system/core/libion/kernel-headers
+
 LOCAL_SRC_FILES := gpt-utils.cpp
 LOCAL_CFLAGS := -Wall
 ifeq ($(TARGET_HAS_GENERIC_KERNEL_HEADERS),true)
@@ -36,7 +43,7 @@ else ifeq ($(TARGET_COMPILE_WITH_MSM_KERNEL),true)
   LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
   LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
 endif
-LOCAL_SHARED_LIBRARIES += liblog libcutils libz
+LOCAL_SHARED_LIBRARIES += liblog libcutils libz libion
 LOCAL_MODULE := librecovery_updater_msm
 LOCAL_COPY_HEADERS_TO := gpt-utils/inc
 LOCAL_COPY_HEADERS := gpt-utils.h
