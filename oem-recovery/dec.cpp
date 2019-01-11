@@ -322,7 +322,7 @@ static int ion_buffer_clean_inval_stub(struct ion_buf_handle *buf)
 
     int ret = 0;
     #ifndef TARGET_ION_ABI_VERSION
-    ret = ion_buffer_clean_inval(&ionbuf, ION_IOC_CLEAN_INV_CACHES);
+    ret = ion_buffer_clean_inval(buf, ION_IOC_CLEAN_INV_CACHES);
     #else
     fprintf(stderr,"ION_IOC_INV_CACHES not defines");
     #endif
