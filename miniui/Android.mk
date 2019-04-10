@@ -9,7 +9,7 @@ LOCAL_MODULE := librecovery_ui_msm
 
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_C_INCLUDES += bootable/recovery
+LOCAL_C_INCLUDES += bootable/recovery/recovery_ui/include
 
 LOCAL_SRC_FILES += msm_recovery_ui.cpp
 
