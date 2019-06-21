@@ -19,6 +19,7 @@ LOCAL_C_INCLUDES := bootable/recovery \
 
 LOCAL_SRC_FILES := gpt-utils.cpp dec.cpp oem-updater.cpp
 LOCAL_CFLAGS := -Wall
+LOCAL_NOSANITIZE := cfi
 ifeq ($(TARGET_HAS_GENERIC_KERNEL_HEADERS),true)
   LOCAL_CFLAGS += -D_GENERIC_KERNEL_HEADERS
 else ifeq ($(TARGET_COMPILE_WITH_MSM_KERNEL),true)
