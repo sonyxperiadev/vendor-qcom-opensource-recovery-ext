@@ -4,7 +4,7 @@ endif
 
 #disable dependency if target uses QMAA
 ifeq ($(TARGET_USES_QMAA),true)
-ifneq ($(TARGET_USES_QMAA_OVERRIDE_ANDROID_RECOVERY),false)
+ifneq ($(TARGET_USES_QMAA_OVERRIDE_ANDROID_RECOVERY),true)
 TARGET_HAS_GENERIC_KERNEL_HEADERS := true
 endif
 endif
