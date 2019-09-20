@@ -2,6 +2,13 @@ ifeq ($(AB_OTA_UPDATER), true)
 BUILD_OEM_UPDATER := true
 endif
 
+#disable dependency if target uses QMAA
+ifeq ($(TARGET_USES_QMAA),true)
+ifneq ($(TARGET_USES_QMAA_OVERRIDE_ANDROID_RECOVERY),true)
+TARGET_HAS_GENERIC_KERNEL_HEADERS := true
+endif
+endif
+
 ifneq ($(filter librecovery_updater_msm,$(TARGET_RECOVERY_UPDATER_LIBS)),)
 BUILD_OEM_UPDATER := true
 endif
@@ -22,6 +29,7 @@ LOCAL_CFLAGS := -Wall
 LOCAL_NOSANITIZE := cfi
 ifeq ($(TARGET_HAS_GENERIC_KERNEL_HEADERS),true)
   LOCAL_CFLAGS += -D_GENERIC_KERNEL_HEADERS
+  LOCAL_CFLAGS += -Wno-unused-parameter
 else ifeq ($(TARGET_COMPILE_WITH_MSM_KERNEL),true)
   LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
   LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr

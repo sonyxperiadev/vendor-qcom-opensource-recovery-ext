@@ -34,6 +34,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/mman.h>
+
+#ifdef _GENERIC_KERNEL_HEADERS
+int decrypt_image(const char *src_file, const char *dst_file){ return -1;}
+#else
+
 #include <linux/qseecom.h>
 #include <linux/msm_ion.h>
 
@@ -521,3 +526,4 @@ exit:
 
     return ret;
 }
+#endif
