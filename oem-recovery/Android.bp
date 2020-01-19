@@ -1,0 +1,35 @@
+cc_library {
+    name: "librecovery_updater",
+    vendor: true,
+    recovery_available: true,
+    srcs: [
+        "gpt-utils.cpp",
+        "dec.cpp",
+        "oem-updater.cpp",
+    ],
+    static_libs: [
+            "libbase",
+            "libedify",
+            "libotautil",
+    ],
+    shared_libs: [
+            "libcutils",
+            "libion",
+            "liblog",
+            "libz",
+    ],
+    cflags: [
+        "-Wall",
+        "-Wno-unused-parameter",
+    ],
+    sanitize: {
+        cfi: false,
+    },
+    owner: "qti",
+    include_dirs: [
+        "system/memory/libion/include",
+        "system/memory/libion/kernel-headers",
+    ],
+    export_include_dirs: ["."],
+    header_libs: ["qti_kernel_headers"],
+}
