@@ -2,6 +2,7 @@ cc_library {
     name: "librecovery_updater",
     vendor: true,
     recovery_available: true,
+    defaults: ["libion_header_paths"],
     srcs: [
         "gpt-utils.cpp",
         "dec.cpp",
@@ -26,10 +27,6 @@ cc_library {
         cfi: false,
     },
     owner: "qti",
-    include_dirs: [
-        "system/memory/libion/include",
-        "system/memory/libion/kernel-headers",
-    ],
     export_include_dirs: ["."],
     header_libs: ["qti_kernel_headers"],
 }
