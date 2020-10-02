@@ -57,8 +57,7 @@ else ifeq ($(TARGET_COMPILE_WITH_MSM_KERNEL),true)
 endif
 LOCAL_SHARED_LIBRARIES += liblog libcutils libz libion
 LOCAL_MODULE := librecovery_updater_msm
-LOCAL_COPY_HEADERS_TO := gpt-utils/inc
-LOCAL_COPY_HEADERS := gpt-utils.h
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 LOCAL_VENDOR_MODULE := true
 include $(BUILD_SHARED_LIBRARY)
 
