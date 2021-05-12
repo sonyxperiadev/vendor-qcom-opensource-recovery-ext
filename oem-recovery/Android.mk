@@ -25,7 +25,7 @@ include $(LIBION_HEADER_PATH_WRAPPER)
 LOCAL_C_INCLUDES += $(LIBION_HEADER_PATHS)
 LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
 LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
-LOCAL_SRC_FILES := gpt-utils.cpp dec.cpp oem-updater.cpp recovery-ufs-bsg.cpp
+LOCAL_SRC_FILES := gpt-utils.cpp oem-updater.cpp recovery-ufs-bsg.cpp
 LOCAL_CFLAGS := -Wall
 LOCAL_NOSANITIZE := cfi
 ifeq ($(TARGET_HAS_GENERIC_KERNEL_HEADERS),true)

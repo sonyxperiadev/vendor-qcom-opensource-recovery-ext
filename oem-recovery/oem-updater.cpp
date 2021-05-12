@@ -31,27 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "edify/expr.h"
-#include "dec.h"
 #include "gpt-utils.h"
 #include "otautil/error_code.h"
-
-Value* DecryptFn(const char* name, State* state,  const std::vector<std::unique_ptr<Expr>>& argv) {
-    int rc = -1;
-
-    if (argv.size() != 2)
-        return ErrorAbort(state,kArgsParsingFailure, "%s() expects 2 arg, got %zu", name, argv.size());
-
-    std::vector<std::string> args;
-    if (!ReadArgs(state,  argv, &args))
-        return NULL;
-
-    const std::string& src_file = args[0];
-    const std::string& dst_file = args[1];
-
-    rc = decrypt_image(src_file.c_str(), dst_file.c_str());
-
-    return StringValue(strdup(rc >= 0 ? "t" : ""));
-}
 
 Value* BootUpdateFn(const char* name, State* state,  const std::vector<std::unique_ptr<Expr>>& argv)
 {
@@ -85,6 +66,5 @@ Value* BootUpdateFn(const char* name, State* state,  const std::vector<std::uniq
 }
 
 void Register_librecovery_updater_msm() {
-    RegisterFunction("msm.decrypt", DecryptFn);
     RegisterFunction("msm.boot_update", BootUpdateFn);
 }

@@ -29,7 +29,6 @@ cc_library {
     defaults: ["libion_header_paths" ,"ufsbsg_defaults"],
     srcs: [
         "gpt-utils.cpp",
-        "dec.cpp",
         "oem-updater.cpp",
         "recovery-ufs-bsg.cpp",
     ],
