@@ -246,11 +246,6 @@ def InstallRawImage(script, f, dest, tf, sf):
     script.ApplyPatch("EMMC:%s:%d:%s:%d:%s" %
                         (dest, sf.size, sf.sha1, tf.size, tf.sha1),
                         "-", tf.size, tf.sha1, sf.sha1, f)
-  elif f.endswith('.enc'):
-    # Get the filename without the path
-    fn = f.split("/")[-1]
-    script.AppendExtra('package_extract_file("%s", "/tmp/%s");' % (f, fn))
-    script.AppendExtra('msm.decrypt("/tmp/%s", "%s");' % (fn, dest))
   else:
     script.AppendExtra('package_extract_file("%s", "%s");' % (f, dest))
   return
@@ -318,9 +313,6 @@ def InstallFwImages(script, files):
 
     if f.endswith('.p'):
       script.ApplyPatch(dest[:-2], "-", tf.size, tf.sha1, sf.sha1, f)
-    elif f.endswith('.enc'):
-      script.AppendExtra('package_extract_file("%s", "/tmp/%s");' % (f, fn))
-      script.AppendExtra('msm.decrypt("/tmp/%s", "%s");' % (fn, dest[:-4]))
     else:
       script.AppendExtra('package_extract_file("%s", "%s");' % (f, dest))
 
