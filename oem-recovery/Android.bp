@@ -8,7 +8,7 @@ soong_config_module_type {
 
 soong_config_string_variable {
     name: "ufsframework",
-    values: ["sg", "bsg"],
+    values: ["sg", "bsg", "non_ufs"],
 }
 
 ufsbsg_cc_defaults {
@@ -18,6 +18,10 @@ ufsbsg_cc_defaults {
             bsg : {
                cflags : ["-D_BSG_FRAMEWORK_KERNEL_HEADERS"],
             },
+//support compilation for non-ufs config
+           non_ufs : {
+              cflags : ["-D_GENERIC_KERNEL_HEADERS"],
+           },
         },
      },
 }
